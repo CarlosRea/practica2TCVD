@@ -1,0 +1,494 @@
+---
+title: "practica2"
+author: "Carlos Rea Nogales & Yago Novoa"
+date: '`r format(Sys.Date(),"%e de %B, %Y")`'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+
+library(ROCR)
+library(vcd)
+library(caTools)
+library(DescTools)
+library(GGally)
+library(agricolae)
+library(fBasics)
+library(Hmisc)
+library(stringi)
+library(corrplot)
+library(car)
+library(nortest)
+library(tidyverse)
+
+```
+
+
+## 
+
+```{r cars}
+
+#wine = read.csv2("winequality-white.csv")
+wine = read.csv("winequality-red.csv")
+summary(wine)
+
+```
+
+```{r}
+
+str(wine)
+
+```
+
+
+```{r}
+
+describe(wine)
+
+```
+
+```{r}
+
+head(wine)
+
+```
+
+
+```{r}
+
+#parseo de variables numericas
+# wine$fixed.acidity = parse_number(wine$fixed.acidity)
+# wine$volatile.acidity = parse_number(wine$volatile.acidity)
+# wine$citric.acid = parse_number(wine$citric.acid)
+# wine$residual.sugar = parse_number(wine$residual.sugar)
+# wine$chlorides = parse_number(wine$chlorides)
+# wine$free.sulfur.dioxide = parse_number(wine$free.sulfur.dioxide)
+# wine$total.sulfur.dioxide = parse_number(wine$total.sulfur.dioxide)
+# wine$density = parse_number(wine$density)
+# wine$pH = parse_number(wine$pH)
+# wine$sulphates = parse_number(wine$sulphates)
+# wine$alcohol = parse_number(wine$alcohol)
+
+
+#str(wine)
+```
+
+```{r}
+print("-------------------------------------------------------------------------------------------------------------------")
+print("NÚMERO DE VALORES VACÍOS DE CADA ATRIBUTO")
+# se estudia si existen atributos vacios
+colSums(is.na(wine))
+
+print("-------------------------------------------------------------------------------------------------------------------")
+print("NÚMERO DE VALORES 0 DE CADA ATRIBUTO NUMERICO")
+# miramos si cuantos valores ceros existen
+colSums(wine== 0 ,na.rm = TRUE)
+
+```
+
+
+
+```{r}
+
+# outliers
+ggplot(wine, mapping = aes(fixed.acidity)) +
+  geom_histogram(binwidth = 0.2)
+
+# 
+ggplot(wine) +
+  geom_histogram(mapping = aes(fixed.acidity),binwidth = 0.2) +
+  coord_cartesian(ylim = c(0,50))
+
+ggplot(wine,mapping = aes(fixed.acidity)) + 
+  geom_boxplot()
+
+ggplot(data=wine, aes(x=fixed.acidity, y=..density..))+
+  geom_histogram(binwidth = 0.2,
+                 colour = "grey60",
+                 fill = "cornsilk",
+                 alpha = 0.4) +
+  ggtitle("Grafico de distribución de la fixed.acidity") +
+  geom_density()
+
+#wine <- wine %>% filter(fixed.acidity < 15)
+
+# prueba grafica
+mu=mean(wine$fixed.acidity)
+sigma=sd(wine$fixed.acidity)
+qqPlot(na.omit(wine$fixed.acidity),distribution ="norm",mean=mu,sd=sigma)
+
+# ggplot(wine, mapping = aes(sample=fixed.acidity)) +
+#   geom_qq() + stat_qq_line()
+
+# volatile.acidity
+ggplot(wine, mapping = aes(volatile.acidity)) +
+  geom_histogram(binwidth = 0.05)
+
+# 
+ggplot(wine) +
+  geom_histogram(mapping = aes(volatile.acidity),binwidth = 0.05) +
+  coord_cartesian(ylim = c(0,100))
+
+ggplot(wine,mapping = aes(volatile.acidity)) + 
+  geom_boxplot()
+
+# citric.acid
+ggplot(wine, mapping = aes(citric.acid)) +
+  geom_histogram(binwidth = 0.05)
+
+# 
+ggplot(wine) +
+  geom_histogram(mapping = aes(citric.acid),binwidth = 0.05) +
+  coord_cartesian(ylim = c(0,100))
+
+ggplot(wine,mapping = aes(citric.acid)) + 
+  geom_boxplot()
+
+
+# anchura
+ggplot(wine, mapping = aes(residual.sugar)) +
+  geom_histogram(binwidth = 0.5)
+
+# 
+ggplot(wine) +
+  geom_histogram(mapping = aes(residual.sugar),binwidth = 0.5) +
+  coord_cartesian(ylim = c(0,100))
+
+ggplot(wine,mapping = aes(residual.sugar)) + 
+  geom_boxplot()
+
+
+# chlorides
+ggplot(wine, mapping = aes(chlorides)) +
+  geom_histogram(binwidth = 0.005)
+
+# 
+ggplot(wine) +
+  geom_histogram(mapping = aes(chlorides),binwidth = 0.005) +
+  coord_cartesian(ylim = c(0,100))
+
+ggplot(wine,mapping = aes(chlorides)) + 
+  geom_boxplot()
+
+# free.sulfur.dioxide
+ggplot(wine, mapping = aes(free.sulfur.dioxide)) +
+  geom_histogram(binwidth = 2)
+
+# 
+ggplot(wine) +
+  geom_histogram(mapping = aes(free.sulfur.dioxide),binwidth = 2) +
+  coord_cartesian(ylim = c(0,100))
+
+ggplot(wine,mapping = aes(free.sulfur.dioxide)) + 
+  geom_boxplot()
+
+#wine <- wine %>% filter(free.sulfur.dioxide < 65)
+
+# total.sulfur.dioxide
+ggplot(wine, mapping = aes(total.sulfur.dioxide)) +
+  geom_histogram(binwidth = 2)
+
+# 
+ggplot(wine) +
+  geom_histogram(mapping = aes(total.sulfur.dioxide),binwidth = 2) +
+  coord_cartesian(ylim = c(0,50))
+
+ggplot(wine,mapping = aes(total.sulfur.dioxide)) + 
+  geom_boxplot()
+
+# density
+ggplot(wine, mapping = aes(density)) +
+  geom_histogram(binwidth = 0.001)
+
+# 
+ggplot(wine) +
+  geom_histogram(mapping = aes(density),binwidth = 0.001) +
+  coord_cartesian(ylim = c(0,100))
+
+ggplot(wine,mapping = aes(density)) + 
+  geom_boxplot()
+
+# prueba grafica
+mu=mean(wine$density)
+sigma=sd(wine$density)
+qqPlot(na.omit(wine$density),distribution ="norm",mean=mu,sd=sigma)
+
+# pH
+ggplot(wine, mapping = aes(pH)) +
+  geom_histogram(binwidth = 0.01)
+
+# 
+ggplot(wine) +
+  geom_histogram(mapping = aes(pH),binwidth = 0.01) +
+  coord_cartesian(ylim = c(0,20))
+
+ggplot(wine,mapping = aes(pH)) + 
+  geom_boxplot()
+
+# eliminamos outliers mas extremos. 
+#wine <- wine %>% filter(pH > 2.86 & pH < 3.75)
+
+ggplot(data=wine, aes(x=pH, y=..density..))+
+  geom_histogram(binwidth = 0.01,
+                 colour = "grey60",
+                 fill = "cornsilk",
+                 alpha = 0.4) +
+  ggtitle("Grafico de distribución del pH") +
+  geom_density()
+
+# prueba grafica
+mu=mean(wine$pH)
+sigma=sd(wine$pH)
+qqPlot(na.omit(wine$pH),distribution ="norm",mean=mu,sd=sigma)
+
+# sulphates
+ggplot(wine, mapping = aes(sulphates)) +
+  geom_histogram(binwidth = 0.01)
+
+# 
+ggplot(wine) +
+  geom_histogram(mapping = aes(sulphates),binwidth = 0.01) +
+  coord_cartesian(ylim = c(0,20))
+
+ggplot(wine,mapping = aes(sulphates)) + 
+  geom_boxplot()
+
+# alcohol
+ggplot(wine, mapping = aes(alcohol)) +
+  geom_histogram(binwidth = 0.1)
+
+# 
+ggplot(wine) +
+  geom_histogram(mapping = aes(alcohol),binwidth = 0.1) +
+  coord_cartesian(ylim = c(0,20))
+
+ggplot(wine,mapping = aes(alcohol)) + 
+  geom_boxplot()
+
+# quality
+ggplot(wine, mapping = aes(quality)) +
+  geom_histogram(binwidth = 1)
+
+# 
+ggplot(wine) +
+  geom_histogram(mapping = aes(quality),binwidth = 1) +
+  coord_cartesian(ylim = c(0,100))
+
+ggplot(wine,mapping = aes(quality)) + 
+  geom_boxplot()
+
+
+```
+
+```{r}
+
+wine <- wine %>% mutate(qualityDct = ifelse(quality >= 6, "Good", "Bad"))
+wine$qualityDct <- factor(wine$qualityDct)
+
+```
+
+## Comprobación de la normalidad y homogeneidad de la varianza
+
+```{r}
+
+# seleccionamos las variables cuantitativas #
+colnames(wine[sapply(wine, class)=="numeric"]) -> numvars
+
+for (i in numvars) {
+  p_val = ad.test(simplify2array(wine[,i]))$p.value
+  if(p_val < 0.05){
+    cat(i,"-", p_val ,"\n")
+  } 
+}
+
+
+```
+
+
+```{r}
+
+# comprobar si los datos siguen una distribucion normal mediante el test de kolmogorov smirnov lilliefors. 
+lillie.test(wine$pH)
+
+# comprobamos si los datos siguen una distribucion normal mediante el test de anderson-darling
+ad.test(wine$pH)
+
+# comprobamos si los datos siguen una distribucion normal mediante el test de shaphiro wilks
+shapiro.test(wine$pH)
+
+# comprobamos si los datos siguen una distribucion normal mediante el test de d'agostino pearson
+dagoTest(wine$pH)
+
+
+# realizamos la transformacion boxcox de los datos para mejorar la normalidad y homocedasticidad. 
+
+ad.test(bcPower(wine$pH,lambda = 0.6))
+
+shapiro.test(bcPower(wine$pH,lambda = 0.6))
+
+bx = bcPower(wine$pH, lambda = 0.6)
+
+par(mfrow=c(2,2))
+qqnorm(wine$pH, main="pH normal")
+qqline(wine$pH,col=2)
+qqnorm(bx, main="pH Box-Cox")
+qqline(bx,col=2)
+hist(wine$pH,main="pH normal")
+hist(bx, main="pH Box-Cox")
+
+# la transformacion boxcox no consigue mejorar la normalidad, optamos por utilizar una alternativa no parametrica como las pruebas wilcoxon o mann whitney.
+# No obstante como el conjunto de datos se compone de un numero de registros grande, por el teorema central del limite, se podria considerar que los datos siguen una distribucion normal. 
+
+```
+
+```{r}
+
+leveneTest(pH~qualityDct, data = wine)
+
+# dado que los datos no cumplen la condicion de normalidad aplicamos el test de fligner-killeen, que se trata de una alternativa no parametrica
+fligner.test(pH~qualityDct, data = wine)
+
+# dado que el pvalor es superior al nivel de significancia 0.05, se acepta la hipotesis nula de homocedasticidad y se concluye que la variable pH presenta varianzas estadisticamente iguales para los diferentes grupos de quality
+
+```
+
+## Pruebas estadísticas
+### ¿el nivel de acidez es igual para los diferentes niveles de la calidad del vino?
+
+```{r}
+
+# aplicamos pruebas no parametricas dado que no se cumple la normalidad en los datos. Se asume que las distribuciones de los grupos de datos son las mismas. 
+
+wilcox.test(pH~qualityDct,data = wine)
+
+# no se observan diferencias estadisticamente significativas entre el nivel de acidez y la calidad del vino(bueno,malo). 
+wine %>% ggplot(aes(qualityDct,pH)) + geom_boxplot() + coord_flip()
+# precio es independiente del año y la ubicacion? mediante test chi cuadrado contraste de independencia . crear una tabla de año y ubicacion con el precio. 
+
+# estadistico de contraste de hipotesis de mas de 2 grupos, mediante el test de kruskal-wallis. para ver si la distribucion de los distintos niveles de calidad del vino con respecto a la acidez son iguales h0 o no h1
+
+kruskal.test(pH~quality, data = wine)
+
+# se rechaza la hipotesis nula y se acepta la hipotesis alternativa, se observan diferencias para los distintos niveles de calidad del vino(3,4,5,6,7,8)
+wine %>% ggplot(aes(factor(quality),pH)) + geom_boxplot() + coord_flip()
+
+```
+## ¿el nivel de alcohol es igual para los diferentes niveles de la calidad del vino?
+
+```{r}
+
+# aplicamos pruebas no parametricas dado que no se cumple la normalidad en los datos. Se asume que las distribuciones de los grupos de datos son las mismas. 
+
+wilcox.test(alcohol~qualityDct,data = wine)
+
+# se observan diferencias estadisticamente significativas entre el nivel de alcohol y la calidad del vino(bueno,malo). 
+wine %>% ggplot(aes(qualityDct,alcohol)) + geom_boxplot() + coord_flip()
+
+# estadistico de contraste de hipotesis de mas de 2 grupos, mediante el test de kruskal-wallis. para ver si la distribucion de los distintos niveles de calidad del vino con respecto a la acidez son iguales h0 o no h1
+
+kruskal.test(alcohol~quality, data = wine)
+
+# se rechaza la hipotesis nula y se acepta la hipotesis alternativa, se observan diferencias para los distintos niveles de calidad del vino(3,4,5,6,7,8)
+wine %>% ggplot(aes(factor(quality),alcohol)) + geom_boxplot() + coord_flip()
+
+
+```
+
+
+
+##¿Qué variables cuantitativas influyen más en la calidad del vino?
+
+```{r}
+# seleccionamos el df con las variables cuantitativas
+wine_num <- wine %>% select(numvars)
+
+# aplicamos la correlacion con el metodo de spearman ya que los datos no siguen una distribucion normal.
+cor(wine[,1:12],method = "spearman",use = "complete.obs") -> wine_num.cor
+#redondeamos decimales.
+round(wine_num.cor, digits = 2)
+
+# visualizamos la matriz de correlacion
+#corrplot(wine_num.cor)
+corrplot.mixed(wine_num.cor,upper="circle",number.cex=.7,tl.cex=.6)
+
+# Buscamos  las variables con mayor correlación, hemos realizado una selección etre 0.25 y 0.90
+zdf <- as.data.frame(as.table(wine_num.cor))
+zdf_a <- subset(zdf, abs(Freq) > 0.25 & abs(Freq) <0.9)
+# muestro el resultado ordendando la varible Freq
+zdf_a <- arrange(zdf_a, desc(Freq))
+zdf_a
+zdf_a %>% filter(Var1 == 'quality')
+
+# Las variables que mas influyen en la calidad son alcohol, sulphates y volatile.acidity.la mayor correlacion es con el alcohol sin embargo no deja de ser una correlacion debil
+
+```
+
+### modelo de regresion logistica
+
+```{r}
+set.seed(0)
+#dividimos los datos en conjunto de entrenamiento y test
+split = sample.split(wine$quality,SplitRatio = 0.75)
+train_set = subset(wine,split==TRUE)
+test_set = subset(wine, split==FALSE)
+
+# aplicamos un modelo de regresion logistica ya que no asume los supuestos de la regresión lineal, particularmente el de normalidad, Linealidad y homoscedasticidad
+modelo1 = glm(formula = qualityDct ~ alcohol+ sulphates + volatile.acidity,family = "binomial",data = train_set)
+modelo1
+modelo2 = glm(formula = qualityDct ~ alcohol+ sulphates + volatile.acidity + density,family = "binomial",data = train_set)
+modelo2
+modelo3 = glm(formula = qualityDct ~ alcohol+ sulphates + volatile.acidity + density + total.sulfur.dioxide,family = "binomial",data = train_set)
+modelo3
+modelo4 = glm(formula = qualityDct ~ alcohol+ sulphates + volatile.acidity + density + total.sulfur.dioxide + citric.acid,family = "binomial",data = train_set)
+modelo4
+modelo5 = glm(formula = qualityDct ~ alcohol+ sulphates + volatile.acidity + density  + total.sulfur.dioxide + citric.acid + fixed.acidity,family = "binomial",data = train_set)
+modelo5
+
+prob_pred = predict(modelo5, type = "response", newdata = test_set[,1:11])
+
+y_pred = ifelse(prob_pred > 0.5, "Good", "Bad")
+
+# matriz de confusion 
+cnf = table(test_set[,13],y_pred, dnn = c("observaciones","predicciones"))
+cnf
+
+mosaic(cnf, shade = T, colorize = T,
+       gp = gpar(fill = matrix(c("green3", "red2", "red2", "green3"), 2, 2)),sub = TRUE)
+
+y_pred_num = ifelse(y_pred == "Good", 1, 0)
+test_num = ifelse(test_set[,13] == "Good", 1, 0)
+
+pred = ROCR::prediction(y_pred_num,test_num)
+perf <- performance(pred, "tpr", "fpr")
+plot(perf)
+
+AUCLog1=performance(pred, measure = "auc")@y.values[[1]]
+cat("AUC: ",AUCLog1)
+
+newdata = data.frame(
+  alcohol =  9.3,
+  sulphates = 0.34,
+  volatile.acidity = 0.75,
+  density = 0.9878,
+  total.sulfur.dioxide = 45,
+  citric.acid = 0.35,
+  fixed.acidity = 8.2
+)
+
+# mejor modelo modelo5
+prob_pred = predict(modelo5,type = "response",newdata = newdata)
+prob_pred
+y_pred = ifelse(prob_pred > 0.5, "Good", "Bad")
+y_pred
+
+
+```
+
+
+
+
